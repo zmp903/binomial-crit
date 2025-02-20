@@ -1,0 +1,306 @@
+---
+title: "Graphing"
+author: "Zayn P"
+date: "2025-02-18"
+output: html_document
+---
+
+I am going to test out different ways of plotting the binomial curve using different functions and packages.
+
+I am using the bincrit() function to find the critical regions for the test:
+
+```{r}
+# Explaining the inputs in order:
+# 'n and p' are the parameters of the binomial distribution
+# 'numtail' can be either 1 or 2 for a 1- or 2-tailed test respectively
+# 'typetail' can either be "L" for lower or "U" for upper (does not affect a 2-tailed test)
+# 'sig_level' is the significance level expressed as a percentage, eg 5 for 5% significance level
+# 'strictly_lower' decides whether the critical values are decided by it being strictly lower than the significance level (True or T) or whichever value is closer to the significance level (False or F)
+# 'Table_included' produces a matrix "table" of the cumulative frequencies from 0 to n in the console
+# 'Curve_included' (which will be coded in later) will include a graph with the pdf function of each value of x, along with the critical values represented in red
+bincrit <- function(n,p,numtail=2,typetail=c("L","U",""),sig_level,strictly_lower=c(T,F),table_included=c(T,F),curve_included=c(T,F)) {
+c2=NA
+
+if (numtail==1) {
+  if (typetail=="L") {
+    c1=0
+    while (pbinom(c1,n,p)<(sig_level/100)) {
+      c1=c1+1
+    }
+    c1=c1-1
+  } else if (typetail=="U") {
+    c1=0
+    while (pbinom(c1,n,p)<(1-(sig_level/100))) {
+      c1=c1+1
+    }
+  }
+} else if (numtail==2) {
+  c1=0
+  c2=0
+  sig_level=sig_level/2
+  while (pbinom(c1,n,p)<(sig_level/100)) {
+    c1=c1+1
+  }
+  if (c1!=0) {
+    c1=c1-1
+  }
+  while (pbinom(c2,n,p)<(1-(sig_level/100))) {
+    c2=c2+1
+  }
+}
+if (strictly_lower==F) {
+  if (((sig_level/100) - (pbinom(c1,n,p))) > ((pbinom((c1+1),n,p)) - (sig_level/100))) {
+    c1=c1+1
+  }
+  if (!is.na(c2)) {
+    if (((pbinom(c2,n,p)) - (1-(sig_level/100))) > ((1-(sig_level/100)) - (pbinom((c2-1),n,p)))) {
+    c2=c2-1
+    }
+  }
+}
+
+if (numtail==2) {
+  print(paste0("lower crit value: ", c1))
+  print(paste0("upper crit value: ", c2))
+} else if (typetail=="L") {
+  print(paste0("lower crit value: ",c1))
+} else if (typetail=="U") {
+  print(paste0("upper crit value: ",c2))
+}
+
+if (table_included) {
+  table=matrix(data=c("x","P(X<=x)"), ncol=2)
+  x=0
+  while (x<=n) {
+    table=rbind(table,c(x,pbinom(x,n,p)))
+    x=x+1
+  }
+  print(table)
+}
+}
+
+```
+
+```{r}
+# Find the upper and lower critical values for a two-tailed test when:
+# X~B(20,0.5)
+# The significance level is 5%
+# The 
+bincrit(20,0.5,2,"",5,F,T,F)
+
+```
+
+First, the plot() function:
+
+```{r}
+bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""),sig_level,strictly_lower=c(T,F),table_included=c(T,F),curve_included=c(T,F)) {
+#Same as before, skip to line 157
+if (table_included) {
+  table=matrix(data=c("x","P(X<=x)"), ncol=2)
+  x=0
+  while (x<=n) {
+    table=rbind(table,c(x,pbinom(x,n,p)))
+    x=x+1
+  }
+  print(table)
+}
+
+if (numtail==1) {
+  if (typetail=="L") {
+    c1=0
+    while (pbinom(c1,n,p)<(sig_level/100)) {
+      c1=c1+1
+    }
+    c1=c1-1
+  } else if (typetail=="U") {
+    c1=0
+    while (pbinom(c1,n,p)<(1-(sig_level/100))) {
+      c1=c1+1
+    }
+  }
+} else if (numtail==2) {
+  c1=0
+  c2=0
+  sig_level=sig_level/2
+  while (pbinom(c1,n,p)<(sig_level/100)) {
+    c1=c1+1
+  }
+  if (c1!=0) {
+    c1=c1-1
+  }
+  while (pbinom(c2,n,p)<(1-(sig_level/100))) {
+    c2=c2+1
+  }
+}
+if (strictly_lower==F) {
+  if (((sig_level/100) - (pbinom(c1,n,p))) > ((pbinom((c1+1),n,p)) - (sig_level/100))) {
+    c1=c1+1
+  }
+  if (!is.na(c2)) {
+    if (((pbinom(c2,n,p)) - (1-(sig_level/100))) > ((1-(sig_level/100)) - (pbinom((c2-1),n,p)))) {
+    c2=c2-1
+    }
+  }
+}
+
+if (numtail==2) {
+  print(paste0("lower crit value: ", c1))
+  print(paste0("upper crit value: ", c2))
+} else if (typetail=="L") {
+  print(paste0("lower crit value: ", c1))
+} else if (typetail=="U") {
+  print(paste0("upper crit value: ",c2))
+}
+
+if (curve_included) {
+# This plots the main function using lines as the plots of the discrete graph
+  x=0:n
+  plot(x,dbinom(x,n,p),
+  main=paste("Binomial Distribution with n = ",n,", p = ",p,sep=""),
+  ylab="P(X=x)",
+  lwd=2, type="h")
+  
+# This now creates a shading for the single critical region in a one-tailed test, using a translucent red polygon drawn in the size of the region 
+  if (numtail==1) {
+    if (typetail=="L") {
+      x_vector=seq(0,c1)
+      p_vector=dbinom(x_vector,n,p)
+      
+      polygon(c(x_vector,rev(x_vector)),
+              c(p_vector,(rep(0,length(p_vector)))),
+              col=adjustcolor("red",alpha=0.4),border=NA)
+    } else if (typetail=="U") {
+      x_vector=seq(c1,n)
+      p_vector=dbinom(x_vector,n,p)
+      
+      polygon(c(x_vector,rev(x_vector)),
+              c(p_vector,(rep(0,length(p_vector)))),
+              col=adjustcolor("red",alpha=0.4),border=NA)
+    }
+  } 
+  
+  # This combines the 2 codes above to create 2 polygons for the 2 critical regions in a two-tailed test
+  else if (numtail==2) {
+    x_low_vector=seq(0,c1)
+    x_high_vector=seq(c2,n)
+    p_low_vector=dbinom(x_low_vector,n,p)
+    p_high_vector=dbinom(x_high_vector,n,p)
+    
+    polygon(c(x_low_vector,rev(x_low_vector)),
+            c(p_low_vector,(rep(0,length(p_low_vector)))),
+            col=adjustcolor("red",alpha=0.4),border=NA)
+    polygon(c(x_high_vector,rev(x_high_vector)),
+            c(p_high_vector,(rep(0,length(p_high_vector)))),
+            col=adjustcolor("red",alpha=0.4),border=NA)
+  }
+}
+}
+bincrit(100,0.4,2,"",5,T,F,T)
+```
+
+The limitation of this is that I cannot label the critical values so that it is easier to read off the graph.
+
+For this we turn to a graphing package in R, ggplot2.
+
+```{r}
+# The package has to be installed first so it can be used for graphing
+
+ bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""), sig_level,strictly_lower=c(T,F),table_included=c(T,F),curve_included=c(T,F)) {
+#Same as before, skip to line 268   
+library(ggplot2)
+if (table_included) {
+  table=matrix(data=c("x","P(X<=x)"), ncol=2)
+  x=0
+  while (x<=n) {
+    table=rbind(table,c(x,pbinom(x,n,p)))
+    x=x+1
+  }
+  print(table)
+}
+if (numtail==1) {
+  if (typetail=="L") {
+    c1=0
+    while (pbinom(c1,n,p)<(sig_level/100)) {
+      c1=c1+1
+    }
+    c1=c1-1
+  } else if (typetail=="U") {
+    c2=0
+    while (pbinom(c2,n,p)<(1-(sig_level/100))) {
+      c2=c2+1
+    }
+  }
+} else if (numtail==2) {
+  c1=0
+  c2=0
+  sig_level=sig_level/2
+  while (pbinom(c1,n,p)<(sig_level/100)) {
+    c1=c1+1
+  }
+  if (c1!=0) {
+    c1=c1-1
+  }
+  while (pbinom(c2,n,p)<(1-(sig_level/100))) {
+    c2=c2+1
+  }
+}
+if (strictly_lower==F) {
+  if (!(numtail==1&typetail=="U"))
+    if (((sig_level/100) - (pbinom(c1,n,p))) > ((pbinom((c1+1),n,p)) - (sig_level/100))) {
+    c1=c1+1
+  }
+    if (!is.na(c2)) {
+    if (((pbinom(c2,n,p)) - (1-(sig_level/100))) > ((1-(sig_level/100)) - (pbinom((c2-1),n,p)))) {
+    c2=c2-1
+    }
+  }
+}
+
+if (numtail==2) {
+  print(paste0("lower crit value: ", c1))
+  print(paste0("upper crit value: ", c2))
+} else if (typetail=="L") {
+  print(paste0("lower crit value: ",c1))
+} else if (typetail=="U") {
+  print(paste0("upper crit value: ",c2))
+}
+
+x=seq(0,n)
+Density=dbinom(x,n,p)
+gd=data.frame(x,Density)
+# Here a factor, crit_region, is added to a data frame (gd) along with the x values and their density functions, so they can be used to add in colour by bar (critical region in red, the specific critical value in dark red and the acceptance region in dark green) and a label for the critical values
+if (curve_included) {
+  if (numtail==1&typetail=="L") {
+    crit_region = c(rep(1,(c1)),paste0("critical value - ",c1),rep(0,(n-c1)))
+    gd=data.frame(x,Density,crit_region)
+    ggplot(gd, aes(x=x, y=Density, group=crit_region,     fill=as.factor(crit_region)),) + 
+    geom_col(width=0.5,show.legend = F) +                scale_fill_manual(values=c("olivedrab4","red","darkred")) + 
+    geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,color=crit_region),angle=90,nudge_y=0.03,size=2,show.legend=F) +
+    scale_color_manual(values=c(rgb(0,0,0,0),"black"))
+  } 
+  
+  else if (numtail==1&typetail=="U") {
+    crit_region = c(rep(0,(c2)),paste0("critical value - ",c2),rep(1,(n-(c2))))
+    gd=data.frame(x,Density,crit_region)
+    ggplot(gd, aes(x=x, y=Density, group=crit_region,     fill=as.factor(crit_region))) + 
+    geom_col(width=0.5,show.legend = F) +                scale_fill_manual(values=c("olivedrab4","red","darkred")) + 
+    geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,colour=crit_region),angle=90,nudge_y=0.03,size=2,show.legend=F) +
+    scale_color_manual(values=c(rgb(0,0,0,0),"black"))
+  } 
+  
+  else if (numtail==2) {
+    crit_region = c(rep(1,c1),paste0("critical value - ",c1),rep(0,(c2-c1-1)),paste0("critical value - ",c2),rep(1,(n-(c2))))
+    gd=data.frame(x,Density,crit_region)
+    graph=ggplot(gd, aes(x=x, y=Density, group=crit_region,     fill=as.factor(crit_region))) + 
+    geom_col(width=0.5,show.legend = F) + 
+    scale_fill_manual(values=c("olivedrab4","red","darkred","darkred")) +
+      geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,colour=crit_region),angle=90,nudge_y=0.03,size=2,show.legend=F) +
+    scale_color_manual(values=c(rgb(0,0,0,0),"black","black"))
+    
+  }
+  print(gd)
+  print(graph)
+}
+}
+bincrit(100,0.5,2,"U",5,T,T,T)
+```
