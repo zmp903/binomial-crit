@@ -1,5 +1,6 @@
 bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""),sig_level,strictly_lower=c(T,F),table_included=c(T,F),curve_included=c(T,F)) {
-  if (numtail==1) {
+  library(ggplot2)
+    if (numtail==1) {
     if (typetail=="L") {
       c1=0
       while (pbinom(c1,n,p)<(sig_level/100)) {
