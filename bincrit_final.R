@@ -55,7 +55,7 @@ bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""),sig_lev
     if (numtail==1&typetail=="L") {
       crit_region = c(rep(1,(c1)),paste0("critical value - ",c1),rep(0,(n-c1)))
       gd=data.frame(x,Density,crit_region)
-      ggplot(gd, aes(x=x, y=Density, group=crit_region, fill=as.factor(crit_region)),) +
+      graph <- ggplot(gd, aes(x=x, y=Density, group=crit_region, fill=as.factor(crit_region)),) +
       geom_col(width=0.5,show.legend = F) +
       scale_fill_manual(values=c("olivedrab4","red","darkred")) +
       geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,color=crit_region),
@@ -66,7 +66,7 @@ bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""),sig_lev
     else if (numtail==1&typetail=="U") {
         crit_region = c(rep(0,(c2)),paste0("critical value - ",c2),rep(1,(n-(c2))))
         gd=data.frame(x,Density,crit_region)
-        ggplot(gd, aes(x=x, y=Density, group=crit_region, fill=as.factor(crit_region))) +
+        graph <- ggplot(gd, aes(x=x, y=Density, group=crit_region, fill=as.factor(crit_region))) +
         geom_col(width=0.5,show.legend = F) +
         scale_fill_manual(values=c("olivedrab4","red","darkred")) +
         geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,
@@ -77,13 +77,14 @@ bincrit <- function(n,p,numtail=2,typetail=c("lower","upper","L","U",""),sig_lev
     else if (numtail==2) {
         crit_region = c(rep(1,c1),paste0("critical value - ",c1),rep(0,(c2-c1-1)),paste0("critical value - ",c2),rep(1,(n-(c2))))
         gd=data.frame(x,Density,crit_region)
-        ggplot(gd, aes(x=x, y=Density, group=crit_region,fill=as.factor(crit_region))) +
+        graph <- ggplot(gd, aes(x=x, y=Density, group=crit_region,fill=as.factor(crit_region))) +
         geom_col(width=0.5,show.legend = F) +
         scale_fill_manual(values=c("olivedrab4","red","darkred","darkred")) +
         geom_text(data=subset(gd,crit_region!=0),aes(label=crit_region,colour=crit_region),
           angle=90,nudge_y=0.03,size=2,show.legend=F) +
         scale_color_manual(values=c(rgb(0,0,0,0),"black","black"))
     }
+    print(graph)
   }
   if (table_included) {
     table=matrix(data=c("x","P(X<=x)"), ncol=2)
