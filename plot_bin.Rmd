@@ -85,8 +85,10 @@ if (table_included) {
 # Find the upper and lower critical values for a two-tailed test when:
 # X~B(20,0.5)
 # The significance level is 5%
-# The 
-bincrit(20,0.5,2,"",5,F,T,F)
+# The critical values must be strictly lower than the significance level
+# A table of the cumulative frequencies will be included in the console, along with a data frame of the probability density and whether it is in the critical region
+# A graph will not be included in the output
+bincrit(n=20,p=0.5,numtail=2,typetail="",sig_level=5,strictly_lower=T,table_included=T,curve_included=F)
 
 ```
 
